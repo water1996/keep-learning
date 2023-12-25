@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <meta name=viewport
+          content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,minimal-ui">
+    <meta name="referrer" content="no-referrer">
+    <title>直播多路复用</title>
+    <script src="https://cdn.bootcdn.net/ajax/libs/flv.js/1.6.2/flv.min.js"></script>
+</head>
+<body>
+<div>
+    <span>设备ID：</span>
+    <input type="text" id="myDevice0">
+    <button onclick="play('myDevice0','myPlayer1')">播放</button>
+    <video style="width: 300px;height: 200px" id="myPlayer1" muted="" autoplay="" controls="">
+    </video>
+</div>
+<div>
+    <span>设备ID：</span>
+    <input type="text" id="myDevice1">
+    <button onclick="play('myDevice1','myPlayer2')">播放</button>
+    <video style="width: 300px;height: 200px" id="myPlayer2" muted="" autoplay="" controls="">
+    </video>
+</div>
+<div>
+    <span>设备ID：</span>
+    <input type="text" id="myDevice2">
+    <button onclick="play('myDevice2','myPlayer3')">播放</button>
+    <video style="width: 300px;height: 200px" id="myPlayer3" muted="" autoplay="" controls="">
+    </video>
+</div>
+<div>
+    <span>设备ID：</span>
+    <input type="text" id="myDevice3">
+    <button onclick="play('myDevice3','myPlayer4')">播放</button>
+    <video style="width: 300px;height: 200px" id="myPlayer4" muted="" autoplay="" controls="">
+    </video>
+</div>
+<script>
+    let playerArray = [];
+
+    function play(myDevice, videoElementId) {
+        playStop(myDevice);
+        let videoElement = document.getElementById(videoElementId)
+        let deviceId = document.getElementById(myDevice).value;
+        let index = myDevice.replace("myDevice", "");
+        if (!deviceId) {
+            alert("请输入deviceId");
+            return;
+        }
+        let inputUrl = "http://localhost:8234/live?deviceId=" + deviceId;
+        playVideo(inputUrl, videoElement, index);
+    }
+
+    function playStop(myDevice) {
+        let index = myDevice.replace("myDevice", "");
+        let flvPlayer = playerArray[index];
+        if(!flvPlayer){
+            return;
+        }
+        flvPlayer.pause()
+        flvPlayer.unload()
+        flvPlayer.detachMediaElement()
+        flvPlayer.destroy()
+        flvPlayer = null
+    }
+
+    function playVideo(inputUrl, videoElement, index) {
+        if (flvjs.isSupported()) {
+            var player = flvjs.createPlayer({
+                type: 'flv',
+                isLive: true,
+                hasAudio: false,
+                url: inputUrl,
+                enableStashBuffer: false,//关闭缓冲区
+                autoCleanupSourceBuffer: true,//自动清理缓存
+            });
+            player.attachMediaElement(videoElement);
+            player.on('error', function (err) {
+                console.log("flv播放器抛出异常：");
+                console.log(err);
+            });
+            playerArray[parseInt(index)] = player;
+            try {
+                player.load();
+                player.play();
+            } catch (err) {
+                console.log(err);
+            }
+        } else {
+            alert('浏览器不支持flv播放')
+        }
+    }
+</script>
+</body>
+</html>
